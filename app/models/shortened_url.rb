@@ -3,6 +3,8 @@ class ShortenedUrl < ActiveRecord::Base
   validates :short_url, uniqueness: true
   validates :submitter_id, presence: true
 
+  validates_length_of :long_url, maximum: 255, allow_blank: false
+
   belongs_to :submitter,
     foreign_key: :submitter_id,
     primary_key: :id,

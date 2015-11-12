@@ -19,23 +19,35 @@ option = gets.chomp
 puts
 
 if option == '0'
-  puts "Type in your long URL"
-  print "> "
-  url = gets.chomp
-  puts
+  begin
+    puts "Type in your long URL"
+    print "> "
+    url = gets.chomp
+    puts
+
+    surl = ShortenedUrl.create_for_user_and_long_url!(user, url)
+  rescue ActiveRecord::RecordInvalid
+    puts "Your URL was over 255 characters! Please try again."
+    retry
+  end
+
+  puts "Short URL is: #{surl.short_url}"
+  puts "Goodbye!"
 else
   puts "Type in the shortened URL"
   print "> "
   url = gets.chomp
   puts
-end
 
-if option == '0'
-  surl = ShortenedUrl.create_for_user_and_long_url!(user, url)
-  puts "Short URL is: #{surl.short_url}"
-  puts "Goodbye!"
-else
   surl = ShortenedUrl.find_by(short_url: url)
+  until surl
+    puts "Reenter the shortened URL"
+    print "> "
+    url = gets.chomp
+    puts
+    surl = ShortenedUrl.find_by(short_url: url)
+  end
+
   lurl = surl.long_url
 
   puts "Launching #{lurl} ..."
