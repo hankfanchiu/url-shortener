@@ -1,10 +1,11 @@
 class ShortenedUrl < ActiveRecord::Base
-  validates :long_url, presence: true
+  validates :long_url, :submitter_id, presence: true
+
   validates :short_url, uniqueness: true
-  validates :submitter_id, presence: true
-  validate :too_many_recent_submissions
 
   validates_length_of :long_url, maximum: 255, allow_blank: false
+
+  validate :too_many_recent_submissions
 
   belongs_to :submitter,
     foreign_key: :submitter_id,
@@ -48,12 +49,12 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def self.prune(n)
-    old_url_ids = Visit.select(:shortened_url_id).distinct.
+    url_id_hashes = Visit.select(:shortened_url_id).distinct.
       where('created_at < ?', n.minutes.ago)
 
-    old_url_ids.each do |hash|
-      old_url_id = hash[:shortened_url_id]
-      destroy(old_url_id)
+    url_id_hashes.each do |hash|
+      url_id = hash[:shortened_url_id]
+      destroy(url_id)
     end
   end
 
@@ -71,9 +72,13 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   private
+  def recent_submission_count
+    self.class.where(submitter_id: submitter_id).
+      where('created_at > ?', 1.minutes.ago).count
+  end
+
   def too_many_recent_submissions
-    if self.class.where(submitter_id: submitter_id).
-      where('created_at > ?', 1.minutes.ago).count >= 5
+    if recent_submission_count >= 5
       errors[:oversubmissions] << "too many submissions in the last minute!"
     end
   end
