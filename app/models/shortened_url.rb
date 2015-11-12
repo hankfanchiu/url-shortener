@@ -2,6 +2,7 @@ class ShortenedUrl < ActiveRecord::Base
   validates :long_url, presence: true
   validates :short_url, uniqueness: true
   validates :submitter_id, presence: true
+  validate :too_many_recent_submissions
 
   validates_length_of :long_url, maximum: 255, allow_blank: false
 
@@ -57,5 +58,13 @@ class ShortenedUrl < ActiveRecord::Base
   def num_recent_uniques
     visits.select(:visitor_id).distinct.
       where('created_at > ?', 10.minutes.ago).count
+  end
+
+  private
+  def too_many_recent_submissions
+    if self.class.where(submitter_id: submitter_id).
+      where('created_at > ?', 1.minutes.ago).count >= 5
+      errors[:oversubmissions] << "too many submissions in the last minute!"
+    end
   end
 end

@@ -1,5 +1,6 @@
 class User < ActiveRecord::Base
   validates :email_address, presence: true, uniqueness: true
+  validate :too_many_recent_submissions
 
   has_many :submitted_urls,
     foreign_key: :submitter_id,
@@ -15,4 +16,8 @@ class User < ActiveRecord::Base
     -> { distinct },
     through: :visits,
     source: :shortened_url
+
+
+
+
 end
