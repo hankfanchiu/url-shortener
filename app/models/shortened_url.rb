@@ -51,7 +51,7 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def self.prune(n)
-    distinct_url_ids = Visit.select(:shortened_url_id).distinct.
+    distinct_url_ids = Visit.select(:shortened_url_id).distinct
     expired_url_ids = distinct_url_ids.where('created_at < ?', n.minutes.ago)
 
     expired_url_ids.each do |hash|
