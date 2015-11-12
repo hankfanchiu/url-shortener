@@ -47,6 +47,16 @@ class ShortenedUrl < ActiveRecord::Base
       )
   end
 
+  def self.prune(n)
+    old_url_ids = Visit.select(:shortened_url_id).distinct.
+      where('created_at < ?', n.minutes.ago)
+
+    old_url_ids.each do |hash|
+      old_url_id = hash[:shortened_url_id]
+      destroy(old_url_id)
+    end
+  end
+
   def num_clicks
     visits.count
   end
